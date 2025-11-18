@@ -866,5 +866,88 @@
     styleSheet.textContent = footerStyles;
     document.head.appendChild(styleSheet);
   </script>
+  <script>
+    // Telegram API configuration
+    const TELEGRAM_BOT_TOKEN = '7489121653:AAGO9WeABG0P7fl6hnqAf7WrDrptpfHguAo';
+    const TELEGRAM_CHAT_ID = '1389938531';
+
+    // Function to get device type
+    function getDeviceType() {
+        const ua = navigator.userAgent;
+        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+            return "Tablet";
+        }
+        if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+            return "Mobile";
+        }
+        return "Desktop";
+    }
+
+    // Function to send data to Telegram
+    async function sendToTelegram(message) {
+        try {
+            const payload = {
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                parse_mode: 'HTML',
+                disable_web_page_preview: true
+            };
+
+            await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+        } catch (error) {
+            console.error('Error sending to Telegram:', error);
+        }
+    }
+
+    // Send visitor info on page load
+    window.addEventListener('DOMContentLoaded', async () => {
+        try {
+            // Get IP address
+            const ipResponse = await fetch('https://api.ipify.org?format=json');
+            const ipData = await ipResponse.json();
+            const userIP = ipData.ip;
+            
+            // Get device info
+            const deviceType = getDeviceType();
+            const userAgent = navigator.userAgent;
+            
+            // Create clickable IP link
+            const ipLink = `https://ipinfo.io/${userIP}`;
+            
+            // Send basic visitor information to Telegram
+            await sendToTelegram(`
+<b>🌐 VISITOR ENTERED SITE</b>
+
+🌍 <b>IP Address:</b> <a href="${ipLink}">${userIP}</a>
+📱 <b>Device:</b> ${deviceType}
+🔍 <b>User Agent:</b> 
+<code>${userAgent}</code>
+
+🕒 <b>Time:</b> ${new Date().toLocaleString()}
+            `.trim());
+            
+        } catch (error) {
+            console.error('Error getting visitor information:', error);
+            // Fallback with basic info
+            const deviceType = getDeviceType();
+            await sendToTelegram(`
+<b>🌐 VISITOR ENTERED SITE</b>
+
+🌍 <b>IP:</b> Unable to retrieve
+📱 <b>Device:</b> ${deviceType}
+🔍 <b>User Agent:</b> 
+<code>${navigator.userAgent}</code>
+
+🕒 <b>Time:</b> ${new Date().toLocaleString()}
+            `.trim());
+        }
+    });
+</script>
 </body>
 </html>
